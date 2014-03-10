@@ -5,7 +5,7 @@
 	<groupId>org.beatific</groupId>
 	<artifactId>harmony-sso</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.2-SNAPSHOT</version>
 	<name>harmony-sso</name>
 	<url>http://maven.apache.org</url>
 
@@ -147,13 +147,25 @@
 			<artifactId>hazelcast-spring</artifactId>
 			<version>${hazelcast.maven.artifact.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-spring</artifactId>
+			<version>1.2.2</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+			<version>1.2.2</version>
+		</dependency>
 
 	</dependencies>
 
 	<build>
 		<defaultGoal>install</defaultGoal>
 		<directory>${basedir}/target</directory>
-		<finalName>harmony-sso-0.1-SNAPSHOT</finalName>
+		<finalName>harmony-sso-0.2-SNAPSHOT</finalName>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>

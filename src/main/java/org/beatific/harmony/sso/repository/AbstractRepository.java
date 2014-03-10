@@ -2,48 +2,83 @@ package org.beatific.harmony.sso.repository;
 
 import org.beatific.harmony.sso.cache.Cache;
 import org.beatific.harmony.sso.cache.CacheManager;
+import org.beatific.harmony.sso.repository.trigger.Trigger;
+import org.beatific.harmony.sso.session.Session;
 
-public abstract class AbstractRepository<T> implements Repository<T>{
+public abstract class AbstractRepository implements Repository {
 	
-	protected CacheManager cacheManager;
-	private Cache cache = null;
+	private CacheManager cacheManager;
+	protected Cache cache = null;
 	private RepositoryKinds kind;
 
 	public void setCacheManager(CacheManager cacheManager) {
 		this.cacheManager = cacheManager;
 		if(kind == null) new RepositoryKindsNullPointException("The Kinds Of Repository Not Decided!!");
-		cache = cacheManager.getCache(kind.getCacheName());
+		cache = this.cacheManager.getCache(kind.getCacheName());
 	}
 	
-	protected void setRepositoryKinds(RepositoryKinds kind) {
+	public void setRepositoryKinds(RepositoryKinds kind) {
 		this.kind = kind;
 	}
-		
-	public void add(String key, T value) {
-		addToRepository(key, value);
-		cache.put(key, value);
+	
+	public String getRepositoryKinds() {
+		return kind.toString();
 	}
 	
-	protected abstract void addToRepository(String key, Object value);
-	
-	@SuppressWarnings("unchecked")
-	public T get(String key) {
-		T value = (T)cache.get(key);
+	public void add(Session session, Trigger trigger) {
 		
-		if(value==null) {
+		trigger.pull(session, this);
+		cache.put(getKey(session), getValue(session));
+	}
+	
+	public Object get(String key) {
+		
+		Object value = cache.get(key);
+		
+		if(value == null) {
 			value = getFromRepository(key);
-			if(value==null)cache.put(key, value);
+			if(value != null)cache.put(key, value);
 		}
 		
 		return value;
 	}
 	
-	protected abstract T getFromRepository(String key);
-	
-	public void remove(String key) {
-		removeFromRepository(key);
-		cache.evict(key);
+	public void remove(Session session, Trigger trigger) {
+		trigger.pull(session, this);
+		cache.remove(getKey(session));
 	}
 	
-	protected abstract void removeFromRepository(String key);
+	public void evict(Session session, Trigger trigger) {
+		trigger.pull(session, this);
+		cache.evict(getKey(session));
+	}
+	
+	public Object[] checkAdd(Session session, Trigger trigger) {
+		return null;
+	}
+	
+	public Object[] checkRemove(Session session, Trigger trigger) {
+		return null;
+	}
+	
+	public Object[] checkEvict(Session session, Trigger trigger) {
+		return null;
+	}
+ 
+	public void addRepository(Session session) {
+		
+		addToRepository(getKey(session), getValue(session));
+	}
+	
+	public void removeRepository(Session session) {
+		
+		removeFromRepository(getKey(session));
+	}
+	
+	public abstract void addToRepository(String key, Object value);
+	public abstract void removeFromRepository(String key);
+	public abstract Object getFromRepository(String key);
+	public abstract String getKey(Session session);
+	public abstract Object getValue(Session session);
+	
 }

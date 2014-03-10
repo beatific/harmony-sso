@@ -11,14 +11,16 @@ public class SessionValidator {
 	public void setProperties(Properties properties) {
 		this.properties = properties;
 	}
-	public void validate(Session session, SessionContext context) {
-		if(session == null) return;
+	public Session validate(Session session, SessionContext context) {
+		
+		if(session == null) return null;
+		
 		long timeMillis = System.currentTimeMillis();
 		if(timeMillis - session.getLastAccessedTime()  > getLimitedValidateTime()) {
 			session.invalidate(context);
-		} else {
-			session.updateLastAccessedTime();
-		}
+			return null;
+		} 
+		return session;
 	}
 	
 	private long getLimitedValidateTime() {
@@ -31,6 +33,12 @@ public class SessionValidator {
 			return 3600000;
 		} 
 		
-		return Long.parseLong(properties.getProperty(LIMITED_VALIDATE_TIME));
+		return Long.parseLong(properties.getProperty(LIMITED_VALIDATE_TIME)) * 1000;
+	}
+	
+	public boolean isValidate(Session session) {
+		
+		long timeMillis = System.currentTimeMillis();
+		return (timeMillis - session.getLastAccessedTime()  <= getLimitedValidateTime());
 	}
 }

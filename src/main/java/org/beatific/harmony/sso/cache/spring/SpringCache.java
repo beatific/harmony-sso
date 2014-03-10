@@ -3,6 +3,8 @@ package org.beatific.harmony.sso.cache.spring;
 import org.beatific.harmony.sso.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 
+import com.hazelcast.core.IMap;
+
 
 public class SpringCache implements Cache{
 
@@ -19,6 +21,13 @@ public class SpringCache implements Cache{
 	public void evict(Object arg0) {
 		cache.evict(arg0);
 		
+	}
+	
+	public void remove(Object key) {
+		IMap<Object, Object> map = (IMap<Object, Object>)cache.getNativeCache();
+		if (key != null) {
+			map.remove(key);
+		}
 	}
 	
 	public Object get(Object arg0) {

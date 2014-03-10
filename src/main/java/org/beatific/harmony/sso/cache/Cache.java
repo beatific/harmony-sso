@@ -9,5 +9,7 @@ public interface Cache {
 	public Object get(Object arg0);
 
 	public void put(Object arg0, Object arg1);
+	
+	public void remove(Object key);
 
 }

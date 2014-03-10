@@ -5,7 +5,8 @@ import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
 
 import org.beatific.harmony.sso.policy.Policies;
-import org.beatific.harmony.sso.repository.Repository;
+import org.beatific.harmony.sso.repository.Repositories;
+import org.beatific.harmony.sso.repository.RepositoryKinds;
 import org.beatific.harmony.sso.session.Session;
 import org.beatific.harmony.sso.session.SessionContext;
 import org.beatific.harmony.sso.session.SessionIdGenerator;
@@ -13,9 +14,8 @@ import org.beatific.harmony.sso.session.SessionValidator;
 
 public class DefaultSessionContext implements SessionContext {
 
-	private Repository<Session> sessionRepository;
-	private Repository<String> userRepository;
 	private Policies policies;
+	private Repositories repositories;
 	
 	private SessionValidator validator;
 	private int idGenerateCount = 1;
@@ -25,12 +25,8 @@ public class DefaultSessionContext implements SessionContext {
 		this.policies = policies;
 	}
 	
-	public void setSessionRepository(Repository<Session> repository) {
-		sessionRepository = repository;
-	}
-	
-	public void setUserRepository(Repository<String> repository) {
-		userRepository = repository;
+	public void setRepositories(Repositories repositories) {
+		this.repositories = repositories;
 	}
 	
 	public void setIdGenerateCount(int idGenerateCount) {
@@ -41,37 +37,31 @@ public class DefaultSessionContext implements SessionContext {
 		this.validator = validator;
 	}
 	
-	public void invalidate(String sessionId) {
-		invalidate(sessionId, null);
-	}
-	
-	public void invalidate(String sessionId, String userId) {
+	public void invalidate(Session session) {
 		
-		sessionRepository.remove(sessionId);
-		if(userId != null)userRepository.remove(userId);
+		repositories.remove(session);
 	}
 	
 	public Session getSession(String sessionId, HttpServletRequest request) {
 		
-		Session session =  sessionRepository.get(sessionId);
+		Session session =  (Session)repositories.get(RepositoryKinds.session, sessionId);
 		
 		if(!policies.enforce(session, request)) return null;
+
+		session.updateLastAccessedTime();
 		
 		if(session != null && this.idGenerateCount != 0  &&  random.nextInt() % this.idGenerateCount == 0) {
 			String generatedId = SessionIdGenerator.generate();
+			
+			repositories.remove(session);
+			
 			session.setId(generatedId);
-			sessionRepository.remove(sessionId);
-			sessionRepository.add(generatedId, session);
 			
-			
-			String userId = session.getUserId();
-			if(userId != null) {
-				userRepository.remove(userId);
-				userRepository.add(userId, generatedId);
-			}
+			repositories.add(session);
 		}
 		
-		validator.validate(session, this);
+		 session = validator.validate(session, this);
+		
 		return session;
 	}
 	
@@ -83,28 +73,18 @@ public class DefaultSessionContext implements SessionContext {
 		
 		String sessionId = SessionIdGenerator.generate();
 		Session session = new Session(sessionId);
-		
+		session.setUserId(userId);
+		session.setAttribute("userId", userId);
 		session = policies.decide(session, request);
 		
-		if(userId != null) {
-			session.setUserId(userId);
-			String storedSessionId = userRepository.get(userId);
-			if(storedSessionId != null) {
-				userRepository.remove(userId);
-				sessionRepository.remove(storedSessionId);
-			}
-			
-			userRepository.add(userId, sessionId);
-		}
-		
-		sessionRepository.add(sessionId, session);
+		repositories.add(session);
 		
 		return sessionId;
 		
 	}
 	
 	public boolean isDuplicationLogin(String userId) {
-		return (userRepository.get(userId) != null);
+		return repositories.get(RepositoryKinds.user, userId) != null;
 	}
 	
 }

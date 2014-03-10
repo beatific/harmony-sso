@@ -75,12 +75,11 @@ public class Session implements Serializable {
 
 	public void removeAttribute(String name) {
 		map.remove(name);
-		
 	}
 
 	public void invalidate(SessionContext context) {
 		
-		context.invalidate(id, userId);
+		context.invalidate(this);
 		
 		id = null;
 		userId = null;
