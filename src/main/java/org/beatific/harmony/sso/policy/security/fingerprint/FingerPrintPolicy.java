@@ -22,22 +22,22 @@ public class FingerPrintPolicy implements Policy {
 		policy = new AbstractPolicy<FingerPrintElement, SecureObject>() {
 			
 			@Override
-	 public boolean enforce(Session session, HttpServletRequest source)
-     {
-         return enforce(session, source, new PolicyExtractor<SecureObject>() {
-
-				@Override
-				protected Object extractValue(HttpServletRequest request, String fieldName) {
-					if(IP.equals(fieldName)) {
-						return getClientIpAddr(request);
-					} else if(USER_AGENT.equals(fieldName)){
-						return getUserAgent(request);
-					}
-					return null;
-				}
-				
-			});
-     }
+			 public boolean enforce(Session session, HttpServletRequest source)
+		     {
+		         return enforce(session, source, new PolicyExtractor<SecureObject>() {
+		
+						@Override
+						protected Object extractValue(HttpServletRequest request, String fieldName) {
+							if(IP.equals(fieldName)) {
+								return getClientIpAddr(request);
+							} else if(USER_AGENT.equals(fieldName)){
+								return getUserAgent(request);
+							}
+							return null;
+						}
+						
+					});
+		     }
 
 			@Override
 			protected boolean matches(FingerPrintElement element, SecureObject object) {
